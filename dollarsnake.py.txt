@@ -1,0 +1,81 @@
+import curses
+import random
+
+# Initialize the screen
+screen = curses.initscr()
+curses.curs_set(0)
+screen_height, screen_width = screen.getmaxyx()
+window = curses.newwin(screen_height, screen_width, 0, 0)
+window.keypad(1)
+window.timeout(100)
+
+# Create the snake and the dollar sign
+snake_x = screen_width // 4
+snake_y = screen_height // 2
+snake = [
+    [snake_y, snake_x],
+    [snake_y, snake_x - 1],
+    [snake_y, snake_x - 2],
+    [snake_y, snake_x - 3],
+    [snake_y, snake_x - 4],
+    [snake_y, snake_x - 5],
+    [snake_y, snake_x - 6],
+    [snake_y, snake_x - 7]
+]
+
+dollar_x = screen_width // 2
+dollar_y = screen_height // 2
+
+score = 0
+
+# Initial direction
+key = curses.KEY_RIGHT
+
+while True:
+    next_key = window.getch()
+    key = key if next_key == -1 else next_key
+
+    # Calculate the new coordinates of the head of the snake
+    new_head = [snake[0][0], snake[0][1]]
+    if key == curses.KEY_DOWN:
+        new_head[0] += 1
+    if key == curses.KEY_UP:
+        new_head[0] -= 1
+    if key == curses.KEY_LEFT:
+        new_head[1] -= 1
+    if key == curses.KEY_RIGHT:
+        new_head[1] += 1
+
+    # Insert the new head of the snake
+    snake.insert(0, new_head)
+
+    # Check if the snake has caught the dollar sign
+    if new_head[0] == dollar_y and new_head[1] == dollar_x:
+        score += 1
+        dollar_x = random.randint(1, screen_width - 2)
+        dollar_y = random.randint(1, screen_height - 2)
+    else:
+        snake.pop()
+
+    # Clear the screen and draw the snake and the dollar sign
+    window.clear()
+    window.addstr(dollar_y, dollar_x, "$")
+    for i, segment in enumerate(snake):
+        if i < len("MyAiTeam"):
+            window.addstr(segment[0], segment[1], "MyAiTeam"[i])
+        else:
+            window.addstr(segment[0], segment[1], "#")
+    window.addstr(0, 0, f"Score: {score}")
+
+    # Check if the game is over
+    if (
+        new_head[0] == 0
+        or new_head[0] == screen_height - 1
+        or new_head[1] == 0
+        or new_head[1] == screen_width - 1
+        or new_head in snake[1:]
+    ):
+        curses.endwin()
+        quit()
+
+    window.refresh()
